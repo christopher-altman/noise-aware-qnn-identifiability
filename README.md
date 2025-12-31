@@ -76,7 +76,7 @@ This abstraction is deliberately lightweight to keep the phenomenon visible and 
 
 ### Noise Model
 
-Two lightweight, physically inspired noise proxies are applied to the embedded input:
+Three lightweight, physically inspired noise proxies are applied to the embedded input:
 
 1. **Depolarizing‑like noise (p)**  
    With probability `p`, the embedded state is replaced by a random unit vector.
@@ -84,7 +84,13 @@ Two lightweight, physically inspired noise proxies are applied to the embedded i
 2. **Phase‑like noise (σ)**  
    Additive Gaussian perturbation applied to the embedded state.
 
-Noise is swept across multiple (p, σ) regimes.
+3. **Correlated noise (γ)** [NEW]  
+   Amplitude damping where all dimensions are affected by a common environmental factor.
+   Models systematic errors like temperature fluctuations or power supply noise.
+
+Noise is swept across multiple (p, σ, γ) regimes.
+
+**Purpose**: Demonstrates that identifiability collapse is a **general phenomenon**, not specific to independent noise channels. See [CORRELATED_NOISE.md](docs/CORRELATED_NOISE.md) for details.
 
 ### Optimization
 
@@ -94,7 +100,7 @@ Noise is swept across multiple (p, σ) regimes.
 
 ### Metrics
 
-Three quantities are measured:
+Three core quantities are measured:
 
 1. **Task performance**  
    Classification accuracy.
@@ -109,6 +115,19 @@ Three quantities are measured:
 
    Values approaching zero indicate flat or ill‑conditioned loss directions, signaling poor identifiability.
 
+#### Enhanced Identifiability Metrics
+
+For rigorous analysis, the system supports **Fisher Information Matrix** analysis:
+
+- **Fisher Condition Number**: κ(F) = λ_max / λ_min measures ill-conditioning
+- **Effective Rank**: Participation ratio quantifies true dimensionality
+- **Effective Dimension**: Number of well-determined parameter directions
+- **Fisher Trace**: Total information mass
+
+> "Identifiability collapses because the information geometry becomes ill-conditioned."
+
+See [ENHANCED_METRICS.md](docs/ENHANCED_METRICS.md) for complete mathematical details.
+
 ---
 
 ## Results
@@ -119,13 +138,13 @@ Three quantities are measured:
 
 The identifiability axis is plotted on a logarithmic scale to emphasize near‑zero curvature collapse.
 
-![Accuracy vs Identifiability](fig_accuracy_vs_identifiability.png)
+![Accuracy vs Identifiability](assets/figures/fig_accuracy_vs_identifiability.png)
 
 ### Parameter Recovery vs. Noise
 
 Parameter recovery error generally increases with noise, but not necessarily monotonically due to finite‑sample effects and non‑convex optimization dynamics.
 
-![Parameter Error vs Noise](fig_param_error_vs_noise.png)
+![Parameter Error vs Noise](assets/figures/fig_param_error_vs_noise.png)
 
 ---
 
@@ -147,16 +166,57 @@ This motivates the use of **identifiability‑aware evaluation** (and eventually
 
 ## Reproducibility
 
+### Quick Start
+
 From the repository root, run:
 
 ```bash
-python -m src.main
+python -m src
 ```
 
-This execution produces the following artifacts in the repository root:
+This execution produces run artifacts in `artifacts/latest/figs/`:
 
-- `fig_accuracy_vs_identifiability.png`
-- `fig_param_error_vs_noise.png`
+- `artifacts/latest/figs/fig_accuracy_vs_identifiability.png`
+- `artifacts/latest/figs/fig_param_error_vs_noise.png`
+
+The curated, version-controlled figures used in this README are stored in `assets/figures/`.
+
+### Advanced Usage
+
+The system provides comprehensive CLI and configuration capabilities:
+
+```bash
+# Custom noise sweep
+python -m src --depolarizing 0.0 0.1 0.2 --phase 0.0 0.05 0.1
+
+# Extended visualizations
+python -m src --extended-viz --interactive
+
+# Enhanced metrics with Fisher Information (rigorous identifiability analysis)
+python -m src --enhanced-metrics
+
+# Enhanced metrics with batch sampling (faster)
+python -m src --enhanced-metrics --fisher-batch-size 50
+
+# Configuration file
+python -m src --config examples/single_experiment.yaml
+
+# Batch experiments
+python -m src --config examples/batch_experiments.yaml
+```
+
+## Docs
+
+- [`docs/QUICK_REFERENCE.md`](docs/QUICK_REFERENCE.md) — fast start and common commands
+- [`docs/PROJECT_SUMMARY.md`](docs/PROJECT_SUMMARY.md) — project scope and design intent
+- [`docs/FEATURES.md`](docs/FEATURES.md) — feature inventory and roadmap notes
+- [`docs/CLI.md`](docs/CLI.md) — full command-line interface
+- [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md) — YAML and JSON experiment configuration
+- [`docs/ENHANCED_METRICS.md`](docs/ENHANCED_METRICS.md) — Fisher Information and curvature metrics
+- [`docs/ENHANCED_METRICS_INTEGRATION.md`](docs/ENHANCED_METRICS_INTEGRATION.md) — integration notes and validation checks
+- [`docs/VISUALIZATIONS.md`](docs/VISUALIZATIONS.md) — extended plotting and optional interactive output
+- [`docs/DATA_EXPORT_LOGGING.md`](docs/DATA_EXPORT_LOGGING.md) — results export, logging, and artifact layout
+- [`docs/CORRELATED_NOISE.md`](docs/CORRELATED_NOISE.md) — correlated noise model details
 
 All results are deterministic under the fixed random seed specified in the code.
 
@@ -165,11 +225,27 @@ All results are deterministic under the fixed random seed specified in the code.
 ## Implementation Notes
 
 - Language: Python
-- Required dependencies:
-  - numpy
-  - matplotlib
+- Core dependencies:
+  - numpy (numerical computation)
+  - matplotlib (static plots)
+  - scipy (Fisher Information, eigenvalue analysis)
+- Optional dependencies:
+  - plotly (interactive visualizations)
+  - pyyaml (configuration files)
 - No external quantum software development kits are required.
 - The code is structured to emphasize clarity and reproducibility over performance.
+
+### Features
+
+- ✅ **Unit Tests**: Comprehensive test coverage (56 tests)
+- ✅ **CLI Interface**: Full command-line control
+- ✅ **Configuration System**: YAML/JSON experiment definitions
+- ✅ **Extended Visualizations**: Loss landscapes, trajectories, heatmaps
+- ✅ **Interactive Plots**: Plotly-based dashboards
+- ✅ **Data Export**: JSON/CSV/Pickle with metadata
+- ✅ **Logging**: Structured experiment tracking
+- ✅ **Checkpointing**: Resume long-running experiments
+- ✅ **Enhanced Metrics**: Fisher Information Matrix analysis
 
 ---
 

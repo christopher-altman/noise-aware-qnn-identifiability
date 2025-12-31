@@ -38,3 +38,6 @@ __pycache__/
 
 # Claude tooling (local)
 .claude/
+
+# Run artifacts (generated figures and results)
+artifacts/

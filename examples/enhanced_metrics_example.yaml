@@ -1,0 +1,65 @@
+# Enhanced Metrics Example Configuration
+# 
+# This example demonstrates Fisher Information Matrix analysis
+# to rigorously quantify identifiability collapse under noise.
+#
+# "Identifiability collapses because the information geometry becomes ill-conditioned."
+
+experiment:
+  # Problem configuration
+  n_samples: 100
+  input_dim: 4
+  param_dim: 4
+  seed: 42
+  
+  # Noise sweep - compare clean vs noisy
+  noise:
+    depolarizing_probs: [0.0, 0.05, 0.10, 0.15, 0.20]
+    phase_stds: [0.0, 0.02, 0.05, 0.08, 0.10]
+  
+  # Optimization
+  n_iterations: 500
+  hessian_eps: 1e-5
+  
+  # Output configuration
+  output:
+    results_dir: "results/enhanced_metrics"
+    save_plots: true
+    save_results: true
+    export_formats: ["json", "csv"]
+    verbose: true
+  
+  # Visualization options
+  visualization:
+    extended_viz: true       # Loss landscapes, trajectories, heatmaps
+    interactive: true        # Plotly dashboards
+  
+  # Enhanced metrics
+  enhanced_metrics:
+    enabled: true            # Compute Fisher Information Matrix
+    batch_size: 50           # Use subset for efficiency
+    compute_full_fisher: false  # Use empirical Fisher (faster)
+    
+  # Logging and checkpointing
+  logging:
+    structured_logs: true
+    log_progress: true
+  
+  checkpointing:
+    enabled: false           # Not needed for this quick experiment
+
+# Expected outcomes:
+# 
+# At noise = 0.0:
+#   - Fisher condition number < 100 (excellent)
+#   - Effective rank ≈ param_dim (full rank)
+#   - Information geometry quality: "excellent"
+#
+# At noise = 0.20:
+#   - Fisher condition number > 10,000 (collapse)
+#   - Effective rank << param_dim (dimensional collapse)
+#   - Information geometry quality: "poor_ill_conditioned"
+#
+# This demonstrates the core thesis:
+# "Accuracy remains high while identifiability collapses due to 
+#  ill-conditioning of the Fisher Information Matrix."

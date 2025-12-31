@@ -1,0 +1,26 @@
+name: extended_viz_demo
+samples: 256
+dimension: 4
+seed: 42
+optimizer_iterations: 1000
+output_dir: ./results/extended_viz
+generate_plots: true
+save_results: true
+verbose: false
+noise_grid:
+  - p_dep: 0.0
+    sigma_phase: 0.0
+  - p_dep: 0.05
+    sigma_phase: 0.0
+  - p_dep: 0.10
+    sigma_phase: 0.0
+  - p_dep: 0.0
+    sigma_phase: 0.05
+  - p_dep: 0.05
+    sigma_phase: 0.05
+  - p_dep: 0.10
+    sigma_phase: 0.10
+  - p_dep: 0.15
+    sigma_phase: 0.15
+  - p_dep: 0.20
+    sigma_phase: 0.20
