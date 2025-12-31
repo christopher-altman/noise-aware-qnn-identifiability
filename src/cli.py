@@ -128,19 +128,46 @@ Examples:
         help='Finite difference epsilon for Hessian computation (default: 1e-3)'
     )
     
+    # Enhanced metrics configuration
+    metrics_group = parser.add_argument_group('Enhanced Metrics')
+    metrics_group.add_argument(
+        '--enhanced-metrics',
+        action='store_true',
+        help='Compute Fisher Information Matrix and advanced identifiability metrics '
+             '(more rigorous but computationally expensive)'
+    )
+    metrics_group.add_argument(
+        '--fisher-batch-size',
+        type=int,
+        default=None,
+        metavar='SIZE',
+        help='Batch size for Fisher computation (default: use all samples). '
+             'Smaller values are faster but less accurate'
+    )
+    
     # Output configuration
     output_group = parser.add_argument_group('Output Configuration')
     output_group.add_argument(
         '-o', '--output-dir',
         type=Path,
-        default=Path('.'),
+        default=None,
         metavar='DIR',
-        help='Output directory for figures and results (default: current directory)'
+        help='Output directory for figures and results (default: artifacts/latest)'
     )
     output_group.add_argument(
         '--no-plots',
         action='store_true',
         help='Disable plot generation'
+    )
+    output_group.add_argument(
+        '--extended-viz',
+        action='store_true',
+        help='Generate extended visualizations (heatmaps, combined metrics)'
+    )
+    output_group.add_argument(
+        '--interactive',
+        action='store_true',
+        help='Generate interactive Plotly visualizations (HTML)'
     )
     output_group.add_argument(
         '--save-results',
@@ -257,7 +284,7 @@ def main():
         return run_from_config_file(args)
     
     # Create output directory if needed
-    if args.output_dir != Path('.'):
+    if args.output_dir is not None:
         args.output_dir.mkdir(parents=True, exist_ok=True)
     
     # Determine noise grid
@@ -295,8 +322,12 @@ def main():
             hessian_eps=args.hessian_eps,
             output_dir=args.output_dir,
             generate_plots=not args.no_plots,
+            extended_viz=args.extended_viz,
+            interactive=args.interactive,
             verbose=args.verbose,
             quiet=args.quiet,
+            enhanced_metrics=args.enhanced_metrics,
+            fisher_batch_size=args.fisher_batch_size,
         )
         
         # Save results if requested

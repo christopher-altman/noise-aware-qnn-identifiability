@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from src.circuits import feature_map, qnn_forward
-from src.noise import apply_depolarizing, apply_phase_noise
+from src.noise import apply_depolarizing, apply_phase_noise, apply_correlated_noise
 from src.train import finite_diff_hessian_diag
 
 
@@ -233,6 +233,102 @@ class TestApplyPhaseNoise:
         result = apply_phase_noise(0.1, state, rng)
         
         assert result.shape == state.shape
+
+
+class TestApplyCorrelatedNoise:
+    """Tests for apply_correlated_noise amplitude damping."""
+    
+    def test_apply_correlated_noise_with_zero_gamma(self):
+        """Test that apply_correlated_noise returns original state when gamma=0."""
+        rng = np.random.default_rng(42)
+        state = np.array([1.0, 2.0, 3.0, 4.0])
+        
+        result = apply_correlated_noise(0.0, state, rng)
+        
+        # With gamma=0, state should be unchanged
+        assert np.allclose(result, state)
+    
+    def test_apply_correlated_noise_with_gamma_one(self):
+        """Test that apply_correlated_noise produces damped state when gamma=1."""
+        rng = np.random.default_rng(42)
+        state = np.array([1.0, 0.0, 0.0])
+        
+        result = apply_correlated_noise(1.0, state, rng)
+        
+        # With gamma=1, should collapse to random direction
+        assert not np.allclose(result, state)
+        # Result should still be normalized (sqrt(1-gamma)*state + sqrt(gamma)*v)
+        assert np.isclose(np.linalg.norm(result), 1.0, rtol=1e-3)
+    
+    def test_apply_correlated_noise_intermediate_gamma(self):
+        """Test correlated noise with intermediate gamma value."""
+        rng = np.random.default_rng(42)
+        state = np.array([1.0, 1.0, 1.0, 1.0]) / 2.0  # Normalized
+        gamma = 0.3
+        
+        result = apply_correlated_noise(gamma, state, rng)
+        
+        # Should be different from original
+        assert not np.allclose(result, state)
+        
+        # Should preserve approximate scale
+        assert 0.5 < np.linalg.norm(result) < 1.5
+    
+    def test_apply_correlated_noise_validates_gamma(self):
+        """Test that apply_correlated_noise raises error for invalid gamma."""
+        rng = np.random.default_rng(42)
+        state = np.array([1.0, 0.0])
+        
+        with pytest.raises(ValueError, match="gamma must be in"):
+            apply_correlated_noise(-0.1, state, rng)
+        
+        with pytest.raises(ValueError, match="gamma must be in"):
+            apply_correlated_noise(1.5, state, rng)
+    
+    def test_apply_correlated_noise_correlation_structure(self):
+        """Test that correlated noise affects all dimensions in a correlated way."""
+        rng = np.random.default_rng(42)
+        state = np.array([1.0, 0.0, 0.0, 0.0])
+        gamma = 0.5
+        
+        # Apply correlated noise multiple times and observe correlation
+        results = []
+        for i in range(10):
+            rng_temp = np.random.default_rng(100 + i)
+            result = apply_correlated_noise(gamma, state, rng_temp)
+            results.append(result)
+        
+        results = np.array(results)
+        
+        # Correlation structure: dimensions should co-vary
+        # (not independent as in phase noise)
+        # Check that results are not all identical (stochastic)
+        variances = np.var(results, axis=0)
+        assert np.all(variances > 1e-6)  # All dimensions vary
+    
+    def test_apply_correlated_noise_preserves_shape(self):
+        """Test that apply_correlated_noise preserves the shape of the state."""
+        rng = np.random.default_rng(42)
+        state = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        
+        result = apply_correlated_noise(0.3, state, rng)
+        
+        assert result.shape == state.shape
+    
+    def test_apply_correlated_noise_reduces_to_random_at_gamma_one(self):
+        """Test that gamma=1 produces a random direction independent of input."""
+        rng1 = np.random.default_rng(42)
+        rng2 = np.random.default_rng(42)  # Same seed
+        
+        state1 = np.array([1.0, 0.0, 0.0])
+        state2 = np.array([0.0, 1.0, 0.0])  # Different input
+        
+        result1 = apply_correlated_noise(1.0, state1, rng1)
+        result2 = apply_correlated_noise(1.0, state2, rng2)
+        
+        # With same RNG seed and gamma=1, results should be identical
+        # (independent of input state)
+        assert np.allclose(result1, result2)
 
 
 class TestFiniteDiffHessianDiag:
