@@ -1,7 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 
-def plot_results(results):
+def plot_results(results, output_dir=None):
+    if output_dir is None:
+        output_dir = Path('.')
+    else:
+        output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
     p = np.array([r["p_dep"] for r in results])
     s = np.array([r["sigma_phase"] for r in results])
     acc = np.array([r["acc"] for r in results])
@@ -18,7 +24,8 @@ def plot_results(results):
     plt.yscale('log')
     plt.title("High accuracy can coexist with identifiability collapse")
     plt.tight_layout()
-    plt.savefig("fig_accuracy_vs_identifiability.png", dpi=200)
+    plt.savefig(output_dir / "fig_accuracy_vs_identifiability.png", dpi=200)
+    plt.close()
 
     # Param error vs noise
     plt.figure()
@@ -29,4 +36,5 @@ def plot_results(results):
     plt.ylabel("Parameter L2 error")
     plt.title("Parameter recovery degrades with noise")
     plt.tight_layout()
-    plt.savefig("fig_param_error_vs_noise.png", dpi=200)
+    plt.savefig(output_dir / "fig_param_error_vs_noise.png", dpi=200)
+    plt.close()

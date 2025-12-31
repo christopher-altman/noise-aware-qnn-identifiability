@@ -1,0 +1,22 @@
+name: example_experiment
+samples: 512
+dimension: 8
+seed: 42
+optimizer_iterations: 2000
+hessian_eps: 0.001
+output_dir: ./results/example
+generate_plots: true
+save_results: true
+verbose: false
+
+noise_grid:
+  - p_dep: 0.0
+    sigma_phase: 0.0
+  - p_dep: 0.05
+    sigma_phase: 0.0
+  - p_dep: 0.10
+    sigma_phase: 0.0
+  - p_dep: 0.10
+    sigma_phase: 0.10
+  - p_dep: 0.20
+    sigma_phase: 0.20

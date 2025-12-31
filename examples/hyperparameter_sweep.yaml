@@ -1,0 +1,25 @@
+name: dimension_seed_sweep
+parallel: true
+max_workers: 4
+
+sweeps:
+  - name: dim_seed_sweep
+    base_config:
+      name: base
+      samples: 512
+      optimizer_iterations: 1000
+      hessian_eps: 0.001
+      output_dir: ./results/sweep
+      generate_plots: true
+      save_results: true
+      verbose: false
+      noise_grid:
+        - p_dep: 0.0
+          sigma_phase: 0.0
+        - p_dep: 0.10
+          sigma_phase: 0.10
+        - p_dep: 0.20
+          sigma_phase: 0.20
+    sweep_params:
+      dimension: [4, 8, 16]
+      seed: [0, 1, 2]

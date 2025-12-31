@@ -7,3 +7,4 @@ requires-python = ">=3.9"
 [project.dependencies]
 numpy = "*"
 matplotlib = "*"
+pyyaml = "*"

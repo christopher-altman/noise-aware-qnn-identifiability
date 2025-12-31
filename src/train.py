@@ -27,11 +27,23 @@ def finite_diff_hessian_diag(loss_fn, theta: np.ndarray, eps: float = 1e-3) -> n
         hdiag[j] = (l1 - 2*base + l2) / (eps**2)
     return hdiag
 
-def run_experiment(seed: int = 0):
+def run_experiment(
+    seed: int = 0,
+    n: int = 512,
+    d: int = 8,
+    noise_grid: list = None,
+    optimizer_iterations: int = 2000,
+    hessian_eps: float = 1e-3,
+    output_dir = None,
+    generate_plots: bool = True,
+    verbose: bool = False,
+    quiet: bool = False,
+):
     rng = np.random.default_rng(seed)
 
-    # Problem size deliberately small for fast runs
-    n, d = 512, 8
+    if verbose:
+        print(f"Generating dataset with n={n}, d={d}...")
+    
     theta_true = rng.normal(size=d)
     theta_true = theta_true / (np.linalg.norm(theta_true) + 1e-12)
 
@@ -55,14 +67,21 @@ def run_experiment(seed: int = 0):
         # simple 0-1 loss proxy
         return 1.0 - accuracy(y, yhat)
 
-    noise_grid = [(0.0, 0.0), (0.05, 0.0), (0.10, 0.0), (0.10, 0.10), (0.20, 0.20)]
+    if noise_grid is None:
+        noise_grid = [(0.0, 0.0), (0.05, 0.0), (0.10, 0.0), (0.10, 0.10), (0.20, 0.20)]
+    
     results = []
 
-    for (p_dep, sigma_phase) in noise_grid:
+    for idx, (p_dep, sigma_phase) in enumerate(noise_grid, 1):
+        if verbose:
+            print(f"\nNoise setting {idx}/{len(noise_grid)}: p={p_dep:.2f}, σ={sigma_phase:.2f}")
+        
         best_theta = None
         best_loss = 1e9
 
-        for _ in range(2000):
+        for i in range(optimizer_iterations):
+            if verbose and (i + 1) % 500 == 0:
+                print(f"  Iteration {i + 1}/{optimizer_iterations}, best loss: {best_loss:.4f}")
             cand = rng.normal(size=d)
             cand = cand / (np.linalg.norm(cand) + 1e-12)
             l = loss(cand, p_dep, sigma_phase)
@@ -76,8 +95,14 @@ def run_experiment(seed: int = 0):
         def loss_fn(t):
             return loss(t, p_dep, sigma_phase)
 
-        hdiag = finite_diff_hessian_diag(loss_fn, best_theta, eps=1e-3)
+        if verbose:
+            print(f"  Computing Hessian diagonal with eps={hessian_eps}...")
+        
+        hdiag = finite_diff_hessian_diag(loss_fn, best_theta, eps=hessian_eps)
         ident = identifiability_proxy(hdiag)
+        
+        if verbose:
+            print(f"  Results: acc={acc:.4f}, param_err={perr:.4f}, ident={ident:.2e}")
 
         results.append({
             "p_dep": p_dep,
@@ -87,8 +112,15 @@ def run_experiment(seed: int = 0):
             "ident_proxy": ident,
         })
 
-    plot_results(results)
-    print("Wrote: fig_accuracy_vs_identifiability.png, fig_param_error_vs_noise.png")
-    for r in results:
-        print(r)
+    if generate_plots:
+        if verbose:
+            print("\nGenerating plots...")
+        from pathlib import Path
+        plot_output_dir = Path(output_dir) if output_dir is not None else Path('.')
+        plot_results(results, output_dir=plot_output_dir)
+        if not quiet:
+            print(f"\nPlots saved to: {plot_output_dir}/")
+            print(f"  - fig_accuracy_vs_identifiability.png")
+            print(f"  - fig_param_error_vs_noise.png")
+    
     return results
