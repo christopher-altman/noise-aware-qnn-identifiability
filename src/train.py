@@ -1,8 +1,17 @@
 import numpy as np
+import time
 from .circuits import feature_map, qnn_forward
 from .noise import apply_depolarizing, apply_phase_noise, apply_correlated_noise
 from .metrics import accuracy, l2_param_error, identifiability_proxy
 from .plots import plot_results
+
+# Optional tqdm import
+try:
+    from tqdm.auto import tqdm
+    TQDM_AVAILABLE = True
+except ImportError:
+    TQDM_AVAILABLE = False
+    tqdm = None
 
 def make_dataset(n: int, d: int, theta_true: np.ndarray, rng: np.random.Generator):
     X = rng.normal(size=(n, d))
@@ -74,10 +83,20 @@ def run_experiment(
 
     if noise_grid is None:
         noise_grid = [(0.0, 0.0, 0.0), (0.05, 0.0, 0.0), (0.10, 0.0, 0.0), (0.10, 0.10, 0.0), (0.20, 0.20, 0.0)]
-    
+
     results = []
 
-    for idx, noise_params in enumerate(noise_grid, 1):
+    # Determine progress display mode
+    show_progress = not quiet and TQDM_AVAILABLE
+    fallback_progress = not quiet and not TQDM_AVAILABLE
+
+    # Wrap noise_grid with tqdm if available and not quiet
+    if show_progress:
+        pbar = tqdm(noise_grid, desc="Noise settings", unit="setting")
+    else:
+        pbar = noise_grid
+
+    for idx, noise_params in enumerate(pbar, 1):
         # Support both 2-param (backward compat) and 3-param noise models
         if len(noise_params) == 2:
             p_dep, sigma_phase = noise_params
@@ -85,12 +104,19 @@ def run_experiment(
         else:
             p_dep, sigma_phase, gamma_corr = noise_params
         
+        # Heartbeat: noise setting boundary
+        if fallback_progress:
+            if gamma_corr > 0:
+                print(f"[{idx}/{len(noise_grid)}] p={p_dep:.2f}, σ={sigma_phase:.2f}, γ={gamma_corr:.2f}")
+            else:
+                print(f"[{idx}/{len(noise_grid)}] p={p_dep:.2f}, σ={sigma_phase:.2f}")
+
         if verbose:
             if gamma_corr > 0:
                 print(f"\nNoise setting {idx}/{len(noise_grid)}: p={p_dep:.2f}, σ={sigma_phase:.2f}, γ={gamma_corr:.2f}")
             else:
                 print(f"\nNoise setting {idx}/{len(noise_grid)}: p={p_dep:.2f}, σ={sigma_phase:.2f}")
-        
+
         best_theta = None
         best_loss = 1e9
 
@@ -110,18 +136,26 @@ def run_experiment(
         def loss_fn(t):
             return loss(t, p_dep, sigma_phase, gamma_corr)
 
+        # Heartbeat: Hessian computation
+        t0_hess = time.time()
         if verbose:
             print(f"  Computing Hessian diagonal with eps={hessian_eps}...")
-        
+
         hdiag = finite_diff_hessian_diag(loss_fn, best_theta, eps=hessian_eps)
         ident = identifiability_proxy(hdiag)
+
+        t_hess = time.time() - t0_hess
+        if verbose:
+            print(f"  Hessian computed in {t_hess:.2f}s")
         
         # Compute enhanced metrics if requested
         enhanced_result = {}
         if enhanced_metrics:
+            # Heartbeat: Fisher computation start
+            t0_fisher = time.time()
             if verbose:
                 print(f"  Computing Fisher Information Matrix...")
-            
+
             # Create model and loss function wrappers for Fisher computation
             def model_fn(x, theta):
                 """Model function: returns p(y=1|x,theta) with current noise."""
@@ -149,8 +183,10 @@ def run_experiment(
                     hessian_eps=hessian_eps,
                     batch_size=fisher_batch_size
                 )
-                
+
+                t_fisher = time.time() - t0_fisher
                 if verbose:
+                    print(f"  Fisher computed in {t_fisher:.2f}s")
                     print(f"  Fisher κ(F): {enhanced_result['fisher_condition_number']:.2e}")
                     print(f"  Effective rank: {enhanced_result['fisher_effective_rank']:.2f}")
                     print(f"  Quality: {enhanced_result['information_geometry_quality']}")
@@ -166,6 +202,19 @@ def run_experiment(
         
         if verbose:
             print(f"  Results: acc={acc:.4f}, param_err={perr:.4f}, ident={ident:.2e}")
+
+        # Update tqdm postfix with metrics
+        if show_progress:
+            postfix_dict = {
+                'acc': f'{acc:.3f}',
+                'ident': f'{ident:.1e}'
+            }
+            if enhanced_result and 'fisher_condition_number' in enhanced_result:
+                postfix_dict['κ(F)'] = f'{enhanced_result["fisher_condition_number"]:.1e}'
+            try:
+                pbar.set_postfix(postfix_dict)
+            except:
+                pass
 
         result_dict = {
             "p_dep": p_dep,
@@ -183,6 +232,8 @@ def run_experiment(
         results.append(result_dict)
 
     if generate_plots:
+        # Heartbeat: plot generation
+        t0_plots = time.time()
         if verbose:
             print("\nGenerating plots...")
         from pathlib import Path
@@ -192,6 +243,9 @@ def run_experiment(
         plot_output_dir = base_output_dir / 'figs'
         plot_output_dir.mkdir(parents=True, exist_ok=True)
         plot_results(results, output_dir=plot_output_dir, extended_viz=extended_viz, interactive=interactive)
+        t_plots = time.time() - t0_plots
+        if verbose:
+            print(f"Plots generated in {t_plots:.2f}s")
         if not quiet:
             print(f"\nPlots saved to: {plot_output_dir}/")
             print(f"  - {plot_output_dir}/fig_accuracy_vs_identifiability.png")
