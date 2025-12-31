@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+
+# Envs
+.venv/
+venv/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS/editor
+.DS_Store
+
+
+.venv/
+__pycache__/
+*.pyc
+
+.DS_Store
+# Python / venv
+.venv/
+__pycache__/
+*.py[cod]
+
+# pytest
+.pytest_cache/
+
+# macOS
+.DS_Store
+
+# Claude tooling (local)
+.claude/

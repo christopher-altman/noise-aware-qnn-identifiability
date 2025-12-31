@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Noise-Aware QNN Identifiability"
+authors:
+  - family-names: "Altman"
+    given-names: "Christopher"
+year: 2025
+version: 0.1.0
+url: "https://github.com/christopher-altman/noise-aware-qnn-identifiability"

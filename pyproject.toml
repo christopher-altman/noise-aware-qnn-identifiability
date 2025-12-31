@@ -1,0 +1,9 @@
+[project]
+name = "noise-aware-qnn-identifiability"
+version = "0.1.0"
+description = "Minimal micro-research project: accuracy vs identifiability in noisy QNNs"
+requires-python = ">=3.9"
+
+[project.dependencies]
+numpy = "*"
+matplotlib = "*"
