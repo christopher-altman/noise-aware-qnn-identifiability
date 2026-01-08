@@ -7,6 +7,7 @@ def plot_results(results, output_dir=None, extended_viz: bool = False, interacti
     """
     Generate visualizations for experiment results.
 
+    
     Args:
         results: List of experiment results
         output_dir: Output directory for plots
@@ -188,6 +189,7 @@ def plot_results(results, output_dir=None, extended_viz: bool = False, interacti
         noise_level = p + s
         plt.semilogy(noise_level, fisher_cond, 'o-', markersize=8, linewidth=2)
 
+        
         # Add quality thresholds
         plt.axhline(y=100, color='g', linestyle='--', alpha=0.5, label='Excellent (κ<100)')
         plt.axhline(y=1000, color='orange', linestyle='--', alpha=0.5, label='Good (κ<1000)')
@@ -198,6 +200,12 @@ def plot_results(results, output_dir=None, extended_viz: bool = False, interacti
                         (noise_level[i], fisher_cond[i]),
                         xytext=(5, 5), textcoords='offset points', fontsize=8)
 
+        
+        for i in range(len(results)):
+            plt.annotate(f"p={p[i]:.2f},σ={s[i]:.2f}", 
+                        (noise_level[i], fisher_cond[i]),
+                        xytext=(5, 5), textcoords='offset points', fontsize=8)
+        
         plt.xlabel("Noise Level (p + σ)", fontsize=12)
         plt.ylabel("Fisher Condition Number κ(F)", fontsize=12)
         plt.title("Information Geometry Degrades with Noise\nIdentifiability collapses as κ(F) → ∞", fontsize=13)

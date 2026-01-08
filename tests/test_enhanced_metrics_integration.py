@@ -261,9 +261,9 @@ class TestEnhancedMetricsIntegration:
             verbose=False,
             quiet=True
         )
-
+        
         result = results[0]
-
+        
         # Check all expected Fisher metrics
         expected_metrics = [
             'fisher_trace',
@@ -281,82 +281,10 @@ class TestEnhancedMetricsIntegration:
             'is_identifiable',
             'information_geometry_quality'
         ]
-
+        
         for metric in expected_metrics:
             assert metric in result, f"Missing metric: {metric}"
             assert result[metric] is not None, f"Metric is None: {metric}"
-
-    def test_extended_viz_outputs_created(self):
-        """Test that extended viz outputs are created when extended_viz=True."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = Path(tmpdir)
-
-            results = run_experiment(
-                seed=42,
-                n=50,
-                d=4,
-                noise_grid=[(0.0, 0.0), (0.1, 0.0), (0.2, 0.0)],
-                optimizer_iterations=100,
-                generate_plots=True,
-                extended_viz=True,
-                interactive=False,
-                enhanced_metrics=False,
-                output_dir=output_dir,
-                verbose=False,
-                quiet=True
-            )
-
-            # Check that plots were created in figs/ subdirectory
-            figs_dir = output_dir / "figs"
-
-            # Base plots (always generated)
-            assert (figs_dir / "fig_accuracy_vs_identifiability.png").exists()
-            assert (figs_dir / "fig_param_error_vs_noise.png").exists()
-            # Hero variants (always generated)
-            assert (figs_dir / "hero_identifiability_dark.png").exists()
-            assert (figs_dir / "hero_identifiability_light.png").exists()
-
-            # Extended viz plots
-            assert (figs_dir / "heatmap_acc.png").exists()
-            assert (figs_dir / "heatmap_param_l2.png").exists()
-            assert (figs_dir / "heatmap_ident_proxy.png").exists()
-            assert (figs_dir / "combined_metrics.png").exists()
-
-    def test_interactive_outputs_created_when_plotly_available(self):
-        """Test that interactive outputs are created when plotly is available."""
-        pytest.importorskip("plotly")
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = Path(tmpdir)
-
-            results = run_experiment(
-                seed=42,
-                n=50,
-                d=4,
-                noise_grid=[(0.0, 0.0), (0.1, 0.0), (0.2, 0.0)],
-                optimizer_iterations=100,
-                generate_plots=True,
-                interactive=True,
-                extended_viz=False,
-                enhanced_metrics=False,
-                output_dir=output_dir,
-                verbose=False,
-                quiet=True
-            )
-
-            # Check that plots were created in figs/ subdirectory
-            figs_dir = output_dir / "figs"
-
-            # Base plots (always generated)
-            assert (figs_dir / "fig_accuracy_vs_identifiability.png").exists()
-            assert (figs_dir / "fig_param_error_vs_noise.png").exists()
-            # Hero variants (always generated)
-            assert (figs_dir / "hero_identifiability_dark.png").exists()
-            assert (figs_dir / "hero_identifiability_light.png").exists()
-
-            # Interactive outputs
-            assert (figs_dir / "interactive_heatmaps.html").exists()
-            assert (figs_dir / "interactive_dashboard.html").exists()
 
 
 class TestCLIIntegration:

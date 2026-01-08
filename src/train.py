@@ -113,12 +113,22 @@ def run_experiment(
         if not quiet and (now - last_beat) > 30:
             print(f"[heartbeat] still working… ({idx}/{len(noise_grid)})", flush=True)
             last_beat = now
+    
+    results = []
+
+    for idx, noise_params in enumerate(noise_grid, 1):
         # Support both 2-param (backward compat) and 3-param noise models
         if len(noise_params) == 2:
             p_dep, sigma_phase = noise_params
             gamma_corr = 0.0
         else:
             p_dep, sigma_phase, gamma_corr = noise_params
+        
+        if verbose:
+            if gamma_corr > 0:
+                print(f"\nNoise setting {idx}/{len(noise_grid)}: p={p_dep:.2f}, σ={sigma_phase:.2f}, γ={gamma_corr:.2f}")
+            else:
+                print(f"\nNoise setting {idx}/{len(noise_grid)}: p={p_dep:.2f}, σ={sigma_phase:.2f}")
         
         # Heartbeat: noise setting boundary
         if fallback_progress:
@@ -203,6 +213,54 @@ def run_experiment(
                 t_fisher = time.time() - t0_fisher
                 if verbose:
                     print(f"  Fisher computed in {t_fisher:.2f}s")
+                    print(f"  Fisher κ(F): {enhanced_result['fisher_condition_number']:.2e}")
+                    print(f"  Effective rank: {enhanced_result['fisher_effective_rank']:.2f}")
+                    print(f"  Quality: {enhanced_result['information_geometry_quality']}")
+            
+            except ImportError:
+                if verbose:
+                    print("  Warning: Enhanced metrics module not available")
+                enhanced_result = {}
+            except Exception as e:
+                if verbose:
+                    print(f"  Warning: Fisher computation failed: {e}")
+                enhanced_result = {}
+        
+        # Compute enhanced metrics if requested
+        enhanced_result = {}
+        if enhanced_metrics:
+            if verbose:
+                print(f"  Computing Fisher Information Matrix...")
+            
+            # Create model and loss function wrappers for Fisher computation
+            def model_fn(x, theta):
+                """Model function: returns p(y=1|x,theta) with current noise."""
+                phi = feature_map(x)
+                phi_n = apply_depolarizing(p_dep, phi, rng)
+                phi_n = apply_phase_noise(sigma_phase, phi_n, rng)
+                phi_n = apply_correlated_noise(gamma_corr, phi_n, rng)
+                score = qnn_forward(phi_n, theta)
+                # Convert score to probability using logistic function
+                return 1.0 / (1.0 + np.exp(-score))
+            
+            def loss_fn_fisher(theta_param):
+                """Loss function for Fisher computation."""
+                return loss(theta_param, p_dep, sigma_phase, gamma_corr)
+            
+            try:
+                from .enhanced_metrics import compute_all_enhanced_metrics
+                
+                enhanced_result = compute_all_enhanced_metrics(
+                    model_fn=model_fn,
+                    loss_fn=loss_fn_fisher,
+                    theta=best_theta,
+                    X=X,
+                    y=y,
+                    hessian_eps=hessian_eps,
+                    batch_size=fisher_batch_size
+                )
+                
+                if verbose:
                     print(f"  Fisher κ(F): {enhanced_result['fisher_condition_number']:.2e}")
                     print(f"  Effective rank: {enhanced_result['fisher_effective_rank']:.2f}")
                     print(f"  Quality: {enhanced_result['information_geometry_quality']}")
