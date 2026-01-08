@@ -1,13 +1,14 @@
 import numpy as np
 import time
+import sys
 from .circuits import feature_map, qnn_forward
 from .noise import apply_depolarizing, apply_phase_noise, apply_correlated_noise
 from .metrics import accuracy, l2_param_error, identifiability_proxy
 from .plots import plot_results
 
-# Optional tqdm import
+# Optional tqdm import (terminal-safe)
 try:
-    from tqdm.auto import tqdm
+    from tqdm import tqdm  # terminal-safe, not tqdm.auto
     TQDM_AVAILABLE = True
 except ImportError:
     TQDM_AVAILABLE = False
@@ -92,11 +93,26 @@ def run_experiment(
 
     # Wrap noise_grid with tqdm if available and not quiet
     if show_progress:
-        pbar = tqdm(noise_grid, desc="Noise settings", unit="setting")
+        pbar = tqdm(
+            noise_grid,
+            desc="Noise settings",
+            unit="setting",
+            dynamic_ncols=True,
+            leave=True,
+            file=sys.stderr,  # plays nicer in many terminals
+        )
     else:
         pbar = noise_grid
 
+    # Time heartbeat tracking
+    last_beat = time.time()
+
     for idx, noise_params in enumerate(pbar, 1):
+        # Heartbeat: periodic time update (every 30s)
+        now = time.time()
+        if not quiet and (now - last_beat) > 30:
+            print(f"[heartbeat] still working… ({idx}/{len(noise_grid)})", flush=True)
+            last_beat = now
         # Support both 2-param (backward compat) and 3-param noise models
         if len(noise_params) == 2:
             p_dep, sigma_phase = noise_params

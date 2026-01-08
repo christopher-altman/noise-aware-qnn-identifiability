@@ -197,6 +197,9 @@ class TestEnhancedMetricsIntegration:
             # Base plots (always generated)
             assert (figs_dir / "fig_accuracy_vs_identifiability.png").exists()
             assert (figs_dir / "fig_param_error_vs_noise.png").exists()
+            # Hero variants (always generated)
+            assert (figs_dir / "hero_identifiability_dark.png").exists()
+            assert (figs_dir / "hero_identifiability_light.png").exists()
             # Fisher plots (generated with enhanced_metrics=True)
             assert (figs_dir / "fig_fisher_condition_vs_noise.png").exists()
             assert (figs_dir / "fig_fisher_vs_identifiability.png").exists()
@@ -309,6 +312,9 @@ class TestEnhancedMetricsIntegration:
             # Base plots (always generated)
             assert (figs_dir / "fig_accuracy_vs_identifiability.png").exists()
             assert (figs_dir / "fig_param_error_vs_noise.png").exists()
+            # Hero variants (always generated)
+            assert (figs_dir / "hero_identifiability_dark.png").exists()
+            assert (figs_dir / "hero_identifiability_light.png").exists()
 
             # Extended viz plots
             assert (figs_dir / "heatmap_acc.png").exists()
@@ -344,6 +350,9 @@ class TestEnhancedMetricsIntegration:
             # Base plots (always generated)
             assert (figs_dir / "fig_accuracy_vs_identifiability.png").exists()
             assert (figs_dir / "fig_param_error_vs_noise.png").exists()
+            # Hero variants (always generated)
+            assert (figs_dir / "hero_identifiability_dark.png").exists()
+            assert (figs_dir / "hero_identifiability_light.png").exists()
 
             # Interactive outputs
             assert (figs_dir / "interactive_heatmaps.html").exists()

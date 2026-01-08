@@ -38,8 +38,12 @@ def run_single_experiment(config: ExperimentConfig) -> Dict[str, Any]:
             hessian_eps=config.hessian_eps,
             output_dir=output_dir,
             generate_plots=config.generate_plots,
+            extended_viz=getattr(config, 'extended_viz', False),
+            interactive=False,
             verbose=config.verbose,
-            quiet=not config.verbose,
+            quiet=False,  # Always show progress bars and heartbeats
+            enhanced_metrics=getattr(config, 'enhanced_metrics', False),
+            fisher_batch_size=None,
         )
         
         # Save results

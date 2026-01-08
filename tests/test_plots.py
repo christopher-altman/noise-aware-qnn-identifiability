@@ -24,8 +24,10 @@ class TestGetIndicesToAnnotate:
         # Mock plt to avoid actual plotting
         with patch('src.plots.plt') as mock_plt:
             mock_fig = MagicMock()
+            mock_ax = MagicMock()
             mock_plt.figure.return_value = mock_fig
-            
+            mock_plt.subplots.return_value = (mock_fig, mock_ax)
+
             # Call plot_results which internally uses get_indices_to_annotate
             plot_results(results, output_dir="/tmp/test_plots")
             
@@ -59,8 +61,10 @@ class TestGetIndicesToAnnotate:
         
         with patch('src.plots.plt') as mock_plt:
             mock_fig = MagicMock()
+            mock_ax = MagicMock()
             mock_plt.figure.return_value = mock_fig
-            
+            mock_plt.subplots.return_value = (mock_fig, mock_ax)
+
             plot_results(results, output_dir="/tmp/test_plots")
             
             # Check annotate calls
@@ -117,8 +121,10 @@ class TestGetIndicesToAnnotate:
         
         with patch('src.plots.plt') as mock_plt:
             mock_fig = MagicMock()
+            mock_ax = MagicMock()
             mock_plt.figure.return_value = mock_fig
-            
+            mock_plt.subplots.return_value = (mock_fig, mock_ax)
+
             plot_results(results, output_dir="/tmp/test_plots")
             
             # Get annotations
@@ -152,8 +158,10 @@ class TestGetIndicesToAnnotate:
         # Should not raise an error
         with patch('src.plots.plt') as mock_plt:
             mock_fig = MagicMock()
+            mock_ax = MagicMock()
             mock_plt.figure.return_value = mock_fig
-            
+            mock_plt.subplots.return_value = (mock_fig, mock_ax)
+
             # This should complete without error
             plot_results(results, output_dir="/tmp/test_plots")
             
@@ -179,8 +187,10 @@ class TestGetIndicesToAnnotate:
         # Should not raise an error
         with patch('src.plots.plt') as mock_plt:
             mock_fig = MagicMock()
+            mock_ax = MagicMock()
             mock_plt.figure.return_value = mock_fig
-            
+            mock_plt.subplots.return_value = (mock_fig, mock_ax)
+
             # This should complete without error
             plot_results(results, output_dir="/tmp/test_plots")
             
@@ -205,8 +215,10 @@ class TestGetIndicesToAnnotate:
         # Should not raise an error even when all values are NaN
         with patch('src.plots.plt') as mock_plt:
             mock_fig = MagicMock()
+            mock_ax = MagicMock()
             mock_plt.figure.return_value = mock_fig
-            
+            mock_plt.subplots.return_value = (mock_fig, mock_ax)
+
             # This should complete without error
             plot_results(results, output_dir="/tmp/test_plots")
             
@@ -229,8 +241,10 @@ class TestGetIndicesToAnnotate:
         
         with patch('src.plots.plt') as mock_plt:
             mock_fig = MagicMock()
+            mock_ax = MagicMock()
             mock_plt.figure.return_value = mock_fig
-            
+            mock_plt.subplots.return_value = (mock_fig, mock_ax)
+
             plot_results(results, output_dir="/tmp/test_plots")
             
             # At threshold, should annotate all points
@@ -253,8 +267,10 @@ class TestGetIndicesToAnnotate:
         
         with patch('src.plots.plt') as mock_plt:
             mock_fig = MagicMock()
+            mock_ax = MagicMock()
             mock_plt.figure.return_value = mock_fig
-            
+            mock_plt.subplots.return_value = (mock_fig, mock_ax)
+
             plot_results(results, output_dir="/tmp/test_plots")
             
             # Extract annotation texts to verify limited annotations
