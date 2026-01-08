@@ -17,9 +17,16 @@ def parse_noise_grid(noise_str: str) -> list:
         return None
     
     try:
-        pairs = noise_str.split(';')
+        # Support both semicolon and space separation
+        if ';' in noise_str:
+            pairs = noise_str.split(';')
+        else:
+            pairs = noise_str.split()
+            
         result = []
         for pair in pairs:
+            if not pair.strip():
+                continue
             p_dep, sigma_phase = pair.split(',')
             result.append((float(p_dep), float(sigma_phase)))
         return result

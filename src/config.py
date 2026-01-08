@@ -36,6 +36,8 @@ class ExperimentConfig:
     generate_plots: bool = True
     save_results: bool = True
     verbose: bool = False
+    enhanced_metrics: bool = False
+    extended_viz: bool = False
     
     def __post_init__(self):
         # Convert noise_grid dicts to NoiseConfig objects if needed
@@ -240,6 +242,8 @@ def create_default_config(name: str = "default_experiment") -> ExperimentConfig:
         generate_plots=True,
         save_results=True,
         verbose=False,
+        enhanced_metrics=False,
+        extended_viz=False,
     )
 
 
