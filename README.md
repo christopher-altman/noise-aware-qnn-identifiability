@@ -16,6 +16,9 @@
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Altman-blue?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/Altman)
 <!-- [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX) -->
 
+![Accuracy vs Identifiability](accuracy-vs-identifiability-dark.png)
+<sub>**Figure 1. Accuracy is not identifiability**. A model can achieve high predictive performance through many observationally equivalent internal solutions. As identifiability constraints narrow that solution space, measured accuracy may decline—showing that performance alone does not reveal which representation or mechanism produced the result. </sub>
+
 ## Overview
 
 This repository presents a controlled, fully reproducible micro‑study demonstrating a specific and important verification failure mode in noisy quantum (and quantum‑inspired) learning systems:
